@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,10 +14,15 @@ Route::prefix('auth')->group(function () {
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
 
+    // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me',      [AuthController::class, 'me']);
 
+    // Workspaces
     Route::apiResource('workspaces', WorkspaceController::class);
     Route::post('workspaces/{workspace}/members',          [WorkspaceController::class, 'addMember']);
     Route::delete('workspaces/{workspace}/members/{user}', [WorkspaceController::class, 'removeMember']);
+
+    // Projects (nested under workspaces)
+    Route::apiResource('workspaces/{workspace}/projects', ProjectController::class);
 });

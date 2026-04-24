@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('workspaces/{workspace}/members',          [WorkspaceController::class, 'addMember']);
     Route::delete('workspaces/{workspace}/members/{user}', [WorkspaceController::class, 'removeMember']);
 
-    // Projects (nested under workspaces)
+    // Projects
     Route::apiResource('workspaces/{workspace}/projects', ProjectController::class);
+
+    // Tasks (nested under workspace + project)
+    Route::apiResource('workspaces/{workspace}/projects/{project}/tasks', TaskController::class);
+
+    // Kanban move endpoint
+    Route::patch(
+        'workspaces/{workspace}/projects/{project}/tasks/{task}/move',
+        [TaskController::class, 'move']
+    )->name('tasks.move');
 });

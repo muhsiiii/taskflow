@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
@@ -27,12 +28,26 @@ Route::middleware('auth:sanctum')->group(function () {
     // Projects
     Route::apiResource('workspaces/{workspace}/projects', ProjectController::class);
 
-    // Tasks (nested under workspace + project)
+    // Tasks
     Route::apiResource('workspaces/{workspace}/projects/{project}/tasks', TaskController::class);
-
-    // Kanban move endpoint
     Route::patch(
         'workspaces/{workspace}/projects/{project}/tasks/{task}/move',
         [TaskController::class, 'move']
     )->name('tasks.move');
+
+    // Attachments
+    Route::get(
+        'workspaces/{workspace}/projects/{project}/tasks/{task}/attachments',
+        [AttachmentController::class, 'index']
+    )->name('attachments.index');
+
+    Route::post(
+        'workspaces/{workspace}/projects/{project}/tasks/{task}/attachments',
+        [AttachmentController::class, 'store']
+    )->name('attachments.store');
+
+    Route::delete(
+        'workspaces/{workspace}/projects/{project}/tasks/{task}/attachments/{attachment}',
+        [AttachmentController::class, 'destroy']
+    )->name('attachments.destroy');
 });

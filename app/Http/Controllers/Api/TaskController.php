@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Jobs\SendTaskNotification;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
@@ -69,7 +71,13 @@ class TaskController extends Controller
             'sort_order'   => $request->sort_order ?? 0,
         ]);
 
-        $task->load(['assignee:id,name', 'creator:id,name', 'parent:id,title', 'subtasks']);
+        $task->load(['assignee:id,name,email', 'creator:id,name', 'parent:id,title', 'subtasks']);
+
+        // Dispatch email notification if task is assigned to someone
+        if ($task->assignee_id) {
+            $assignee = User::find($task->assignee_id);
+            SendTaskNotification::dispatch($task, $assignee);
+        }
 
         return response()->json([
             'message' => 'Task created successfully.',
@@ -108,6 +116,12 @@ class TaskController extends Controller
 
         $task->update($request->validated());
 
+        // Send notification if assignee changed
+        if ($request->has('assignee_id') && $request->assignee_id) {
+            $task->load(['project']);
+            $assignee = User::find($request->assignee_id);
+            SendTaskNotification::dispatch($task, $assignee);
+        }
         $task->load(['assignee:id,name', 'creator:id,name', 'subtasks']);
 
         return response()->json([

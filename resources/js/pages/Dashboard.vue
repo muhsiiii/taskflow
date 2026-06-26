@@ -44,6 +44,78 @@
       </div>
     </div>
 
+    <div class="grid gap-5 lg:grid-cols-[1.35fr_0.65fr] mb-8">
+      <div class="rounded-2xl p-5" style="background:#1a1a2e;border:1px solid #2d2d4e;">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-lg font-semibold" style="color:#f1f5f9;">Workspace snapshot</h2>
+            <p class="text-sm" style="color:#64748b;">A quick view of your current workspace health.</p>
+          </div>
+          <button @click="openDocs"
+            class="rounded-full bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">Docs</button>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div class="rounded-2xl p-4" style="background:#11121d;border:1px solid #2d2d4e;">
+            <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Projects</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ activeProjects }}</p>
+          </div>
+          <div class="rounded-2xl p-4" style="background:#11121d;border:1px solid #2d2d4e;">
+            <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Due soon</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ upcomingTasks.length }}</p>
+          </div>
+          <div class="rounded-2xl p-4" style="background:#11121d;border:1px solid #2d2d4e;">
+            <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Overdue</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ overdueTasks.length }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-3 sm:grid-cols-3">
+          <button @click="showModal = true"
+            class="rounded-2xl border border-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500/20">+ New Task</button>
+          <button @click="window.location.href = '/projects'"
+            class="rounded-2xl border border-slate-600 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">+ New Project</button>
+          <button @click="openDocs"
+            class="rounded-2xl border border-slate-600 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">View docs</button>
+        </div>
+      </div>
+
+      <div class="grid gap-5">
+        <div class="rounded-2xl p-5" style="background:#1a1a2e;border:1px solid #2d2d4e;">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm uppercase tracking-[0.35em] text-slate-500">Upcoming deadlines</p>
+              <h3 class="text-lg font-semibold" style="color:#f1f5f9;">Next 7 days</h3>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full" style="background:#2d2d4e;color:#94a3b8;">{{ upcomingTasks.length }} due</span>
+          </div>
+          <div class="space-y-3">
+            <div v-if="!upcomingTasks.length" class="text-sm text-slate-500">No deadlines in the next week. Great work.</div>
+            <div v-for="task in upcomingTasks" :key="task.id" class="rounded-2xl p-4" style="background:#11121d;border:1px solid #2d2d4e;">
+              <div class="flex items-center justify-between gap-3">
+                <p class="font-medium text-white truncate">{{ task.title }}</p>
+                <span class="text-xs rounded-full px-2 py-1" style="background:rgba(99,102,241,0.15);color:#818cf8;">{{ formatDate(task.due_date) }}</span>
+              </div>
+              <p class="text-xs mt-2 text-slate-400 truncate">{{ task.description || 'No description provided.' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-5" style="background:#1a1a2e;border:1px solid #2d2d4e;">
+          <p class="text-sm uppercase tracking-[0.35em] text-slate-500">Activity feed</p>
+          <h3 class="text-lg font-semibold mb-4" style="color:#f1f5f9;">Recent updates</h3>
+          <div class="space-y-3">
+            <div v-if="!recentActivity.length" class="text-sm text-slate-500">No recent activity yet. Create a task to get started.</div>
+            <div v-for="item in recentActivity" :key="item.message" class="rounded-2xl p-4" style="background:#11121d;border:1px solid #2d2d4e;">
+              <p class="text-xs uppercase tracking-[0.35em]" :style="item.variant === 'warning' ? 'color:#fca5a5;' : item.variant === 'accent' ? 'color:#c4b5fd;' : 'color:#7dd3fc;'">{{ item.title }}</p>
+              <p class="mt-2 text-sm text-slate-300">{{ item.message }}</p>
+              <p class="mt-2 text-xs text-slate-500">{{ formatDate(item.date) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Kanban header -->
     <div class="flex justify-between items-center mb-5">
       <div class="flex items-center gap-3">
@@ -187,6 +259,7 @@ const WS = 1
 const PR = 1
 
 const tasks = ref([])
+const projects = ref([])
 const loading = ref(false)
 const creating = ref(false)
 const showModal = ref(false)
@@ -197,6 +270,7 @@ const form = ref({ title: '', description: '', priority: 'medium', due_date: '' 
 const columns = [
   { status: 'todo', label: 'To Do', color: '#64748b', emoji: '📝' },
   { status: 'in_progress', label: 'In Progress', color: '#6366f1', emoji: '⚡' },
+  { status: 'in_review', label: 'In Review', color: '#f59e0b', emoji: '🧪' },
   { status: 'done', label: 'Done', color: '#22c55e', emoji: '🎉' },
 ]
 
@@ -223,6 +297,57 @@ const stats = computed(() => [
   { label: 'In Progress', value: tasksByStatus.value.in_progress.length, color: '#f59e0b', sub: 'being worked on' },
   { label: 'To Do', value: tasksByStatus.value.todo.length, color: '#64748b', sub: 'not started yet' },
 ])
+
+const upcomingTasks = computed(() => {
+  const limit = addDays(7)
+  return tasks.value
+    .filter(t => t.due_date && !isOverdue(t) && t.due_date <= limit)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))
+    .slice(0, 5)
+})
+
+const overdueTasks = computed(() => tasks.value.filter(isOverdue))
+
+const activeProjects = computed(() => projects.value.length)
+
+const recentActivity = computed(() => {
+  const events = []
+  tasks.value.forEach(task => {
+    if (isOverdue(task)) {
+      events.push({
+        title: 'Overdue Task',
+        message: `${task.title} is overdue`,
+        date: task.due_date || 'No date',
+        variant: 'warning',
+      })
+    } else if (task.status === 'in_review') {
+      events.push({
+        title: 'Review Requested',
+        message: `${task.title} is ready for review`,
+        date: task.due_date || 'No date',
+        variant: 'info',
+      })
+    } else if (task.due_date && task.due_date <= addDays(3)) {
+      events.push({
+        title: 'Upcoming Deadline',
+        message: `${task.title} is due ${formatDate(task.due_date)}`,
+        date: task.due_date,
+        variant: 'accent',
+      })
+    }
+  })
+  return events.slice(0, 5)
+})
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function addDays(days) {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return date.toISOString().split('T')[0]
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function isOverdue(task) {
@@ -251,6 +376,19 @@ async function loadTasks() {
   } finally {
     loading.value = false
   }
+}
+
+async function loadProjects() {
+  try {
+    const res = await axios.get(`/api/workspaces/${WS}/projects`, { headers: getHeaders() })
+    projects.value = res.data.data
+  } catch (e) {
+    console.error('Projects failed:', e)
+  }
+}
+
+function openDocs() {
+  window.location.href = '/docs'
 }
 
 async function createTask() {
@@ -287,7 +425,10 @@ async function onDrop(event, newStatus) {
 
 // ── Lifecycle ─────────────────────────────────────────────────────────
 onBeforeMount(() => requireAuth())
-onMounted(() => loadTasks())
+onMounted(() => {
+  loadTasks()
+  loadProjects()
+})
 </script>
 
 <style scoped>

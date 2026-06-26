@@ -1,18 +1,23 @@
 <template>
   <AppLayout>
     <div>
-      <div class="flex justify-between items-center mb-8">
+      <div class="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center mb-8">
         <div>
           <h1 class="text-2xl font-bold" style="color:#f1f5f9;">My Tasks</h1>
           <p class="text-sm mt-1" style="color:#64748b;">All tasks assigned to you</p>
         </div>
-        <div class="flex gap-2">
-          <button v-for="f in filters" :key="f.value" @click="activeFilter = f.value"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all" :style="activeFilter === f.value
-              ? 'background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.3);'
-              : 'background:#1a1a2e;color:#64748b;border:1px solid #2d2d4e;'">
-            {{ f.label }}
-          </button>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input v-model="searchQuery" type="search" placeholder="Search tasks..."
+            class="rounded-2xl px-4 py-2 text-sm outline-none"
+            style="background:#0f0f1a;border:1px solid #2d2d4e;color:#e2e8f0;min-width:220px;" />
+          <div class="flex gap-2">
+            <button v-for="f in filters" :key="f.value" @click="activeFilter = f.value"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all" :style="activeFilter === f.value
+                ? 'background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.3);'
+                : 'background:#1a1a2e;color:#64748b;border:1px solid #2d2d4e;'">
+              {{ f.label }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -82,6 +87,7 @@ const PR = 1
 const tasks = ref([])
 const loading = ref(false)
 const activeFilter = ref('all')
+const searchQuery = ref('')
 
 const filters = [
   { value: 'all', label: 'All' },
@@ -92,9 +98,21 @@ const filters = [
 
 onBeforeMount(() => requireAuth())
 
-const filteredTasks = computed(() =>
-  activeFilter.value === 'all' ? tasks.value : tasks.value.filter(t => t.status === activeFilter.value)
-)
+const filteredTasks = computed(() => {
+  const normalizedSearch = searchQuery.value.trim().toLowerCase()
+  const filtered = activeFilter.value === 'all'
+    ? tasks.value
+    : tasks.value.filter(t => t.status === activeFilter.value)
+
+  if (!normalizedSearch) {
+    return filtered
+  }
+
+  return filtered.filter(t =>
+    t.title.toLowerCase().includes(normalizedSearch) ||
+    (t.description || '').toLowerCase().includes(normalizedSearch)
+  )
+})
 
 const taskStats = computed(() => [
   { label: 'Total', value: tasks.value.length, color: '#6366f1' },

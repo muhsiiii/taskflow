@@ -67,6 +67,8 @@ class ProjectController extends Controller
         $project->load([
             'creator:id,name',
             'workspace:id,name',
+            'workspace.taskTemplates' => fn($q) => $q->latest(),
+            'members:id,name',
             'rootTasks' => fn($q) => $q->with(['assignee:id,name', 'subtasks']),
         ])->loadCount('tasks');
 

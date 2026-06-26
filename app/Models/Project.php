@@ -45,4 +45,12 @@ class Project extends Model
     {
         return $this->hasMany(Task::class)->whereNull('parent_id');
     }
+
+    // Project team members
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'project_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
 }

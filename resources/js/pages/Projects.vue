@@ -120,7 +120,7 @@ function statusStyle(status) {
 }
 
 function openProject(project) {
-  window.location.href = `/?project=${project.id}`
+  window.location.href = `/projects/${project.id}`
 }
 
 async function loadProjects() {

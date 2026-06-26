@@ -5,24 +5,36 @@ export function useAuth() {
     const user  = JSON.parse(localStorage.getItem('user') || 'null')
 
     function getHeaders() {
-        return { Authorization: `Bearer ${token}` }
+        return token ? { Authorization: `Bearer ${token}` } : {}
     }
 
-    function requireAuth() {
+    function clearAuth() {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+    }
+
+    async function requireAuth() {
         if (!token) {
             window.location.replace('/login')
             return false
         }
-        return true
+
+        try {
+            await axios.get('/api/auth/me', { headers: getHeaders() })
+            return true
+        } catch (e) {
+            clearAuth()
+            window.location.replace('/login')
+            return false
+        }
     }
 
     async function logout() {
         try {
             await axios.post('/api/auth/logout', {}, { headers: getHeaders() })
-        } catch(e) {}
+        } catch (e) {}
         finally {
-            localStorage.removeItem('token')
-            localStorage.removeItem('user')
+            clearAuth()
             window.location.replace('/login')
         }
     }

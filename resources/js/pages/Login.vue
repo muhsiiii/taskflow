@@ -44,6 +44,12 @@
           <span style="color:#818cf8;">password123</span>
         </div>
       </div>
+      <div class="mt-6 text-center text-sm" style="color:#cbd5e1;">
+        Don’t have an account? <a href="/register" class="text-indigo-300 hover:text-white">Create one</a>
+      </div>
+      <div class="mt-3 text-center text-sm" style="color:#cbd5e1;">
+        <a href="/" class="text-indigo-300 hover:text-white">Back to home</a>
+      </div>
       <p class="text-center text-xs mt-6" style="color:#4a5568;">TaskFlow v1.0.0 — Laravel 13 + Vue 3</p>
     </div>
   </div>
@@ -57,11 +63,23 @@ const form = ref({ email: '', password: '' })
 const loading = ref(false)
 const error = ref(null)
 
-// If already logged in, go to dashboard
-onBeforeMount(() => {
-  if (localStorage.getItem('token')) {
-    window.location.replace('/')
+async function validateAuth() {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    return
   }
+
+  try {
+    await axios.get('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+    window.location.replace('/dashboard')
+  } catch (e) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  }
+}
+
+onBeforeMount(() => {
+  validateAuth()
 })
 
 async function login() {
@@ -75,7 +93,7 @@ async function login() {
     const res = await axios.post('/api/auth/login', form.value)
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
-    window.location.replace('/')
+    window.location.replace('/dashboard')
   } catch (e) {
     error.value = e.response?.data?.message || 'Invalid credentials.'
   } finally {

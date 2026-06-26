@@ -31,6 +31,11 @@ class Workspace extends Model
         return $this->hasMany(Project::class);
     }
 
+    public function taskTemplates()
+    {
+        return $this->hasMany(TaskTemplate::class);
+    }
+
     // All tasks in this workspace
     public function tasks()
     {

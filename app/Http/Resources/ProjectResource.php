@@ -23,6 +23,21 @@ class ProjectResource extends JsonResource
                 'id'   => $this->creator->id,
                 'name' => $this->creator->name,
             ],
+            'members' => $this->whenLoaded('members', fn() => $this->members->map(fn($member) => [
+                'id'   => $member->id,
+                'name' => $member->name,
+                'role' => $member->pivot->role,
+            ])),
+            'task_templates' => $this->when(
+                isset($this->workspace) && $this->workspace->relationLoaded('taskTemplates'),
+                fn() => $this->workspace->taskTemplates->map(fn($template) => [
+                    'id'               => $template->id,
+                    'name'             => $template->name,
+                    'description'      => $template->description,
+                    'status'           => $template->status,
+                    'estimate_minutes' => $template->estimate_minutes,
+                ])
+            ),
             'tasks_count' => $this->whenCounted('tasks'),
             'created_at'  => $this->created_at->format('Y-m-d H:i:s'),
             'updated_at'  => $this->updated_at->format('Y-m-d H:i:s'),

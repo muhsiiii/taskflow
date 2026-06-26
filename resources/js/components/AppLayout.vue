@@ -42,9 +42,10 @@ import { useAuth } from '@/composables/useAuth'
 const { user, logout } = useAuth()
 
 const navItems = [
-  { icon: '🏠', label: 'Dashboard', href: '/' },
+  { icon: '🏠', label: 'Dashboard', href: '/dashboard' },
   { icon: '📋', label: 'Projects', href: '/projects' },
   { icon: '✅', label: 'My Tasks', href: '/tasks' },
+  { icon: '📘', label: 'Guide', href: '/dashboard/docs' },
 ]
 
 const userInitial = computed(() => user?.name ? user.name.charAt(0).toUpperCase() : '?')

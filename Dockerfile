@@ -9,21 +9,25 @@ COPY resources resources
 RUN npm ci --prefer-offline --no-audit --progress=false
 RUN npm run build
 
-### PHP runtime stage
-FROM php:8.2-cli
+### PHP runtime stage (slim, bookworm)
+FROM php:8.2-fpm-bookworm-slim
 WORKDIR /var/www/html
 
-# system deps
-RUN apt-get update && apt-get install -y \
+# system deps (non-interactive, no-install-recommends to keep image small)
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
     libzip-dev \
     libpng-dev \
+    libjpeg-dev \
     libicu-dev \
     libonig-dev \
     zip \
     curl \
-    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath intl gd sockets xml && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath intl gd sockets xml \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

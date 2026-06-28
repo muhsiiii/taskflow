@@ -1,0 +1,38 @@
+name: Prebuild Frontend
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-commit:
+    runs-on: ubuntu-latest
+    if: "github.actor != 'github-actions[bot]'"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Commit built assets
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add public/build || true
+          if git diff --staged --quiet; then
+            echo "No built changes to commit"
+          else
+            git commit -m "chore: prebuilt assets [skip ci]"
+            git push origin main
+          fi

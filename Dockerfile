@@ -1,16 +1,7 @@
 # Multi-stage build: node build for assets, php runtime for app
 
-### Node build stage
-FROM node:22-bookworm AS node-build
-WORKDIR /app
-COPY package.json package-lock.json* ./
-COPY vite.config.js ./
-COPY resources resources
-RUN npm ci --prefer-offline --no-audit --progress=false
-RUN npm run build
-
-### PHP runtime stage (slim, bookworm)
-FROM php:8.2-fpm-bookworm-slim
+### PHP runtime stage (use stable php base)
+FROM php:8.2-fpm
 WORKDIR /var/www/html
 
 # system deps (non-interactive, no-install-recommends to keep image small)
@@ -40,8 +31,7 @@ COPY . /var/www/html
 # install php deps using lockfile
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# copy built assets from node stage
-COPY --from=node-build /app/public/build /var/www/html/public/build
+# public/build is committed to the repository by CI; no Node build on Railway
 
 # set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true

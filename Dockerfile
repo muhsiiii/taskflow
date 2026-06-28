@@ -29,6 +29,8 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # copy app
+
+# copy application source
 COPY . /var/www/html
 
 # install php deps using lockfile
@@ -46,5 +48,10 @@ ENV APP_DEBUG=false
 # Expose port (Railway sets PORT env var)
 EXPOSE 8000
 
-# Start the app using artisan serve on container start
+# Copy entrypoint script and make it executable
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Use entrypoint to clear caches at container start, then run the server
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

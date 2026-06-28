@@ -1,0 +1,13 @@
+node_modules
+vendor
+storage/*.key
+.env
+.git
+/.idea
+.vscode
+public/hot
+public/storage
+tests
+coverage
+npm-debug.log
+yarn-error.log

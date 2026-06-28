@@ -84,7 +84,7 @@
             "php-http/discovery": true
         },
         "audit": {
-            "block-unsecure": false
+            "block-insecure": false
         }
         
     },

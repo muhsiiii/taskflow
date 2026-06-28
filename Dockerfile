@@ -1,7 +1,7 @@
 # Multi-stage build: node build for assets, php runtime for app
 
 ### Node build stage
-FROM node:18-bullseye AS node-build
+FROM node:22-bookworm AS node-build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY vite.config.js ./

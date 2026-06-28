@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);

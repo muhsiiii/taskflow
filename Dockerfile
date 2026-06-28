@@ -9,6 +9,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
+    pkg-config \
+    libxml2-dev \
+    libxml2-utils \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
